@@ -1,5 +1,7 @@
 ﻿using NobleKiller.Behaviour;
 using TaleWorlds.SaveSystem;
+using StoryMode;
+using TaleWorlds.CampaignSystem;
 
 namespace NobleKiller
 {
@@ -12,7 +14,7 @@ namespace NobleKiller
         protected override void DefineClassTypes()
         {
             AddClassDefinition(typeof(AssassinQuest), 5634131);
-            AddClassDefinition(typeof(noblekillerdialogue), 5634132);
+            AddClassDefinition(typeof(NobleKillerDialogue), 56341312);
         }
     }
 }

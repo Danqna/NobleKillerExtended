@@ -1,6 +1,5 @@
 ﻿using Helpers;
 using NobleKiller.MCM;
-using NobleKiller.Modules;
 using StoryMode;
 using System;
 using System.Collections.Generic;
@@ -50,34 +49,69 @@ namespace NobleKiller.Behaviour
 
         //protected JournalLog AssassinationTask;
 
-        [SaveableProperty(1)]
-        public int Payment { get; set; }
-        [SaveableProperty(2)]
-        public Hero Instigator { get; set; }
-        [SaveableProperty(3)]
-        public static bool isActive { get; set; }
-        [SaveableProperty(4)]
-        public Hero Target { get; set; }
+        [SaveableField(1)] 
+        public int Payment;
+        [SaveableField(2)]
+        public static bool FailQuest;
+        [SaveableField(3)]
+        public static bool HideDialogue;
+        [SaveableField(4)] 
+        public Hero Instigator;
+        [SaveableField(5)] 
+        public Hero Target;
+        [SaveableField(6)]
+        private bool AssassinationSuccessful;
+        [SaveableField(7)]
+        public bool QuestRunning;
 
-        private TextObject _StartQuestLog
+        public static bool PublicQuestRunningModifiable { get; set; }
+
+        public AssassinQuest(Hero questGiver, int reward, Hero target, bool questrunning) : base("noblekiller_assassinations", questGiver, duration: CampaignTime.DaysFromNow(NKSettings.Instance.QuestDays), rewardGold: reward)
+        {
+            Payment = reward;
+            Instigator = questGiver;
+            Target = target;
+            FailQuest = questrunning;
+            AssassinationSuccessful = false;
+            QuestRunning = true;
+            //AddTrackedObject(Target);
+
+            // Change hero to be highly likely to die
+            target.ProbabilityOfDeath = 200;
+
+            AddLog(NKStartQuestLog);
+        }
+
+        public override bool IsSpecialQuest => true;
+
+        private TextObject NKStartQuestLog
         {
             get
             {                
                 TextObject assassination = new TextObject("The noble " + Hero.OneToOneConversationHero.Name + " wants me to discreetly take care of " + 
-                    noblekillerdialogue.Instance.RandomSoonToBeDeadGuy.Name + " so my agents are out scouring the land to bring about their demise.");
+                    Target + " so my agents are out scouring the land to bring about their demise.");
                 return assassination;
             }
         }
 
-        private TextObject _EndQuestLog
+        private TextObject NKEndQuestLog
         {
             get
             {
                 TextObject assassination = new TextObject("Mamaaa, just killed a man, put a gun against his head, pulled my trigger, now he's dead.");
                 return assassination;
             }
-        }             
-        
+        }
+
+        private TextObject NKFailQuestLog
+        {
+            get
+            {
+                TextObject assassination = new TextObject("I just couldn't do it, why am I like this? It's a dog eat dog world!");
+                return assassination;
+            }
+        }
+
         public override TextObject Title
         {
             get
@@ -95,51 +129,48 @@ namespace NobleKiller.Behaviour
             }
         }
 
-        public AssassinQuest(Hero questGiver, int reward, Hero target) : base("noblekiller_assassinations", questGiver, duration: CampaignTime.DaysFromNow(NKSettings.Instance._questdays), rewardGold: reward)
-        {
-
-            Payment = reward;
-            Instigator = questGiver;
-            Target = target;
-            //AddTrackedObject(target);
-
-            // Change hero to be highly likely to die
-            target.ProbabilityOfDeath = 200;
-
-            AddLog(_StartQuestLog);
-            isActive = true;
-        }
-
         public void CompleteAssassinQuest()
         {
             CompleteQuestWithSuccess();
             GiveGoldAction.ApplyForQuestBetweenCharacters(Instigator, Hero.MainHero, Payment, false);
-            noblekillerdialogue.Instance.RandomSoonToBeDeadGuy = null;
-            noblekillerdialogue.Instance.playeronassassinationalready = false;
-            isActive = false;
+            FailQuest = false;
+            QuestRunning = false;
+            AssassinQuest.HideDialogue = false;
+            NobleKillerDialogue.RandomSoonToBeDeadGuy = null;
+            NobleKillerDialogue.PublicQuestActiveModifiable = QuestRunning;
+            PublicQuestRunningModifiable = false;
+            AssassinationSuccessful = true;
+            AddLog(NKEndQuestLog);
         }
 
         public void FailAssassinQuest()
         {
             CompleteQuestWithFail();
-            noblekillerdialogue.Instance.RandomSoonToBeDeadGuy = null;
-            noblekillerdialogue.Instance.playeronassassinationalready = false;
-            isActive = false;
+            QuestRunning = false;
+            FailQuest = false;
+            AssassinQuest.HideDialogue = false;
+            NobleKillerDialogue.RandomSoonToBeDeadGuy = null;
+            NobleKillerDialogue.PublicQuestActiveModifiable = QuestRunning;
+            PublicQuestRunningModifiable = false;
+            AddLog(NKFailQuestLog);
         }
 
         protected override void RegisterEvents()
-        {            
+        {
+            PublicQuestRunningModifiable = QuestRunning;
+            NobleKillerDialogue.PublicQuestActiveModifiable = QuestRunning;
+            NobleKillerDialogue.PublicQuestGiverModifiable = Instigator;
             CampaignEvents.TickEvent.AddNonSerializedListener(this, Tick);
         }
 
         protected void Tick(float dt)
         {                        
-            if (noblekillerdialogue.Instance.RandomSoonToBeDeadGuy.IsDead)
+            if (Target.IsDead)
             {
                 CompleteAssassinQuest();
             }            
 
-            if (AssassinQuest.isActive && noblekillerdialogue.Instance.playeronassassinationalready == false)
+            if (FailQuest && !AssassinationSuccessful)
             {
                 // Terminate quest with fail
                 FailAssassinQuest();
@@ -148,24 +179,18 @@ namespace NobleKiller.Behaviour
 
         protected override void InitializeQuestOnGameLoad()
         {
-            SetDialogs();
-                 
+            SetDialogs();                 
         }
 
         protected override void SetDialogs()
-        {
-            // Wonder how hard I'll get punished for not doing any dialogue
-
-            
-
-
-        }       
+        {          
+        }
 
         // Called after the quest is finished
         protected override void OnFinalize()
         {
             base.OnFinalize();
-            AddLog(_EndQuestLog);
+            NobleKillerDialogue.PublicQuestActiveModifiable = false;
         }
     }
 }

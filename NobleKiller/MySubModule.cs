@@ -3,7 +3,6 @@ using MCM;
 using MCM.Implementation;
 using NobleKiller.Behaviour;
 using NobleKiller.MCM;
-using NobleKiller.Modules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,17 +45,14 @@ namespace NobleKiller
 				}
 				AddBehaviors(gameStarterObject as CampaignGameStarter);				
 			}
-			catch (Exception e)
-			{
-				
-			}
+			catch { }
 		}
 		
 		private void AddBehaviors(CampaignGameStarter gameStarterObject)
 		{
 			if (gameStarterObject != null)
 			{
-				gameStarterObject.AddBehavior(noblekillerdialogue.Instance);
+				gameStarterObject.AddBehavior( new NobleKillerDialogue());
 			}			
 		}
 	}
