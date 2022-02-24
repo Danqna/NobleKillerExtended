@@ -172,8 +172,8 @@
     <Compile Include="Behaviour\noblekillerdialogue.cs" />
     <Compile Include="MCM\NKSettings.cs" />
     <Compile Include="Modules\AssassinationQuests.cs" />
-    <Compile Include="Modules\Assassinations.cs" />
     <Compile Include="MySubModule.cs" />
+    <Compile Include="NobleKillerSaveableTypeDefiner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -49,11 +49,15 @@ namespace NobleKiller.Behaviour
         // At some point we should address relation as a reward with the lord
 
         //protected JournalLog AssassinationTask;
+
+        [SaveableProperty(1)]
         public int Payment { get; set; }
-
+        [SaveableProperty(2)]
         public Hero Instigator { get; set; }
-
+        [SaveableProperty(3)]
         public static bool isActive { get; set; }
+        [SaveableProperty(4)]
+        public Hero Target { get; set; }
 
         private TextObject _StartQuestLog
         {
@@ -72,8 +76,8 @@ namespace NobleKiller.Behaviour
                 TextObject assassination = new TextObject("Mamaaa, just killed a man, put a gun against his head, pulled my trigger, now he's dead.");
                 return assassination;
             }
-        }              
-
+        }             
+        
         public override TextObject Title
         {
             get
@@ -96,7 +100,8 @@ namespace NobleKiller.Behaviour
 
             Payment = reward;
             Instigator = questGiver;
-            AddTrackedObject(target);
+            Target = target;
+            //AddTrackedObject(target);
 
             // Change hero to be highly likely to die
             target.ProbabilityOfDeath = 200;
@@ -144,11 +149,14 @@ namespace NobleKiller.Behaviour
         protected override void InitializeQuestOnGameLoad()
         {
             SetDialogs();
+                 
         }
 
         protected override void SetDialogs()
         {
             // Wonder how hard I'll get punished for not doing any dialogue
+
+            
 
 
         }       

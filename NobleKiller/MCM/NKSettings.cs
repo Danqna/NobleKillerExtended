@@ -22,9 +22,8 @@ namespace NobleKiller.MCM
         public float _barterhard { get; set; }
         public float _barterpercent { get; set; }
         public int _questdays { get; set; }
-
-
-        public string _currenttarget = noblekillerdialogue.Instance.targetname;
+        public string _currenttarget { get; set; } // = noblekillerdialogue.Instance.targetname;
+        public bool _questbug { get; set; }
 
         public static NKSettings Instance
         {
@@ -40,10 +39,6 @@ namespace NobleKiller.MCM
 
         public void Settings()
         {
-            // Update this value here
-            _currenttarget = noblekillerdialogue.Instance.targetname;
-            string idiotproofprobably = _currenttarget;
-
             var builder = BaseSettingsBuilder.Create("NobleKiller", "Assassination Options")!
                 .SetFormat("xml")
                 .SetFolderName(MySubModule.ModuleFolderName)
@@ -72,13 +67,17 @@ namespace NobleKiller.MCM
                         .SetHintText("During conversations to start assassination quest"))
                     )
                 .CreateGroup("3. READ ONLY Target Info", groupBuilder => groupBuilder
-                    .AddText("currenttarget", "Current target is: " + idiotproofprobably, new ProxyRef<string>(() => idiotproofprobably, o => idiotproofprobably = o), null)
+                    .AddText("currenttarget", "Current target is: " + _currenttarget, new ProxyRef<string>(() => _currenttarget, o => _currenttarget = o), null)
                     .AddInteger("Currentcost", "Current Cost", _currentcostvalue, _currentcostvalue, new ProxyRef<int>(() => _currentcostvalue, o => _currentcostvalue = o), integerBuilder => integerBuilder
                         .SetHintText("Cost values")))
                 .CreateGroup("4. Debug", groupBuilder => groupBuilder
                     .AddBool("debugger", "Debugging enabled", new ProxyRef<bool>(() => _debugmessages, o => _debugmessages = o), boolBuilder => boolBuilder
                         .SetHintText("Adds messages sometimes")
-                        .SetRequireRestart(false)))
+                        .SetRequireRestart(false))
+                    .AddBool("questbug", "Fix Quest Launch", new ProxyRef<bool>(() => _questbug, o => _questbug = o), boolBuilder => boolBuilder
+                        .SetHintText("If the quest option stops showing")
+                        .SetRequireRestart(false))
+                    )
                 .CreateGroup("5. Reset to defaults", groupBuilder => groupBuilder
                     .AddBool("firstrun", "Uncheck this to reset all settings to defaults - requires restart", new ProxyRef<bool>(() => _firstrundone, o => _firstrundone = o), boolBuilder => boolBuilder
                     .SetHintText("This is for setting defaults")

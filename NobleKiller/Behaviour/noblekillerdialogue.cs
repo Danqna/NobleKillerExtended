@@ -17,32 +17,33 @@ namespace NobleKiller.Behaviour
 {
 	class noblekillerdialogue : CampaignBehaviorBase
 	{
-		/// <summary>
-		/// Future plans:
-		/// 1) Wouldn't it be great if companions did the murder instead of nobles?
-		/// 2) A conversation "convince" chance system would be great
-		/// if you fail, store the failure
-		/// 3) A cost system, randomly rolled for the noble, perhaps depending on their traits even?  
-		/// Easier to find someone to kill a "cruel" lord, but harder to find someone willing to try kill a "devious" lord
-		/// 4) optional random chance of failure and CRITICAL failure (assassin dies)
-		/// 5) add MCM menu integration
-		/// </summary>
-
-
-		// 'Unable to cast object of type 'NobleKiller.MySubModule' to type 'TaleWorlds.MountAndBlade.MBSubModuleBase'.'
 		public static readonly noblekillerdialogue Instance = new noblekillerdialogue();
-		public static Hero NobleKillerTarget { get; set; }
-		public static Hero NobleKillerAssassin { get; set; }
-		public Dictionary<Hero, Assassinations> assassins;
-		public Dictionary<Hero, AssassinationQuests> quests;
-		public string targetname = string.Empty;
-		public bool playeronassassinationalready;
-		bool barterhighsuccess;
-		bool barterhardsuccess;
+
+		// Saveable Fields
+		[SaveableProperty(1)]
 		public Hero RandomSoonToBeDeadGuy { get; set; }
-		public Dictionary<string, TextObject> Attributes;
+
+		[SaveableField(2)]
+		public bool playeronassassinationalready;
+		
+		[SaveableProperty(3)]
+		public static Hero NobleKillerTarget { get; set; }
+
+		[SaveableProperty(4)]
+		public static Hero NobleKillerAssassin { get; set; }
+
+		[SaveableField(5)]
+		public string targetname = string.Empty;
+
+		[SaveableField(6)]
+		bool barterhighsuccess;
+
+		[SaveableField(7)]
+		bool barterhardsuccess;	
+
+		[SaveableProperty(8)]
 		public Hero quest_giver { get; set; }
-		private AssassinQuest currentAssassination;
+		
 
 		public override void RegisterEvents()
 		{
@@ -146,14 +147,10 @@ namespace NobleKiller.Behaviour
 		private void noble_killer_select()
 		{
 			// Old method
-			NobleKillerTarget = Hero.OneToOneConversationHero;
-
-			// New method			
-			Assassinations kill = new Assassinations();
-			kill.target = NobleKillerTarget;			
-			kill.Cost = calculate_assassination_cost();
+			NobleKillerTarget = Hero.OneToOneConversationHero;												
 			targetname = NobleKillerTarget.Name.ToString();
-			NKSettings.Instance._currentcostvalue = kill.Cost;
+			NKSettings.Instance._currentcostvalue = calculate_assassination_cost();
+			NKSettings.Instance._currenttarget = targetname;
 		}
 
 		/// <summary>
@@ -264,6 +261,14 @@ namespace NobleKiller.Behaviour
 
 		private bool playeronassassinquest()
 		{
+			// Debug the quest if it breaks
+			if (NKSettings.Instance._questbug)
+            {
+				playeronassassinationalready = false;
+				AssassinQuest.isActive = false;
+				NKSettings.Instance._questbug = false;
+			}
+
 			if (playeronassassinationalready)
 			{
 				return true;
@@ -406,54 +411,12 @@ namespace NobleKiller.Behaviour
 		/// </summary>
 		private void failassassinquest()
 		{
-			// To-Do's
-			// Fail the journal entry
-
-			// Clear current variables
-
 			// Set quest to not running
 			playeronassassinationalready = false;
 		}
 
-		/// <summary>
-		/// SAVING THE DATA STARTS HERE
-		/// This first variable is the unique key to identify our data in the save file, i.e. to identify this mod's information separately to other mods
-		/// </summary>	
-		private const string SaveDataKey = "noble_killer_savekey_uNiQuE";
-
 		public override void SyncData(IDataStore dataStore)
 		{
-			if (dataStore.IsLoading)
-			{
-				// Load data as usual
-				dataStore.SyncData<Dictionary<Hero, Assassinations>>("assassins", ref assassins);
-				dataStore.SyncData<Dictionary<Hero, AssassinationQuests>>("assassin_quests", ref quests);
-			}
-			else
-			{
-				// Save game				
-				dataStore.SyncData<Dictionary<Hero, Assassinations>>("assassins", ref assassins);
-				dataStore.SyncData<Dictionary<Hero, AssassinationQuests>>("assassin_quests", ref quests);
-			}
-		}
-
-		public class MySaveDefiner : SaveableTypeDefiner
-		{
-			public MySaveDefiner() : base(56341311)
-			{
-			}
-
-			protected override void DefineClassTypes()
-			{
-				AddClassDefinition(typeof(Assassinations), 56341312);
-			}
-
-			protected override void DefineContainerDefinitions()
-			{				
-				ConstructContainerDefinition(typeof(Dictionary<Hero, Assassinations>));				
-			}
-		}
-
-
+		}		
 	}
 }
