@@ -21,10 +21,11 @@ namespace NobleKiller.Behaviour
 		[SaveableField(1)] public bool QuestActive;
 		[SaveableField(2)] public Hero NobleKillerTarget;
 		[SaveableField(3)] public string targetname;
+		[SaveableField(4)] public int _asscost;
 		public bool barterhighsuccess;
 		public bool barterhardsuccess;
 		public Hero quest_giver;
-		public int _asscost;
+		
 		
 
 		public static Hero RandomSoonToBeDeadGuy;
@@ -191,14 +192,11 @@ namespace NobleKiller.Behaviour
 		/// </summary>
 		/// <returns></returns>
 		private bool Noble_Killer_Assassin_Gold_Check()
-		{
-			if (NKSettings.Instance.DebugMessages)               
-			{
-				InformationManager.DisplayMessage(new InformationMessage("Current cost is: " + _asscost));
-			}
+		{			
+			InformationManager.DisplayMessage(new InformationMessage("Current cost is: " + NKSettings.Instance.CurrentCostValue));			
 
 			if (Hero.OneToOneConversationHero != null && Hero.OneToOneConversationHero != NobleKillerTarget && NobleKillerTarget != null 
-				&& Hero.MainHero.Gold >= _asscost && !NobleKillerTarget.IsDead && NobleKillerTarget != Hero.MainHero)
+				&& Hero.MainHero.Gold >= NKSettings.Instance.CurrentCostValue && !NobleKillerTarget.IsDead && NobleKillerTarget != Hero.MainHero)
 			{
 				return true;
 			}
@@ -251,11 +249,13 @@ namespace NobleKiller.Behaviour
             {
 				Random rnd = new Random();
 				cost = rnd.Next(NKSettings.Instance.StartCostValue, NKSettings.Instance.EndCostValue);
+				NKSettings.Instance.CurrentCostValue = cost;
 				return cost;
             }
 			else if(Hero.MainHero.Level == 1)
             {
 				cost = 5000;
+				NKSettings.Instance.CurrentCostValue = cost;
 				return cost;
             }
 			else
@@ -265,6 +265,7 @@ namespace NobleKiller.Behaviour
 				float level = Hero.MainHero.Level;
 				float calc = 5000 * level * (level / 4);
 				cost = Convert.ToInt32(calc);
+				NKSettings.Instance.CurrentCostValue = cost;
 				return cost;
 			}			
         }
@@ -411,7 +412,7 @@ namespace NobleKiller.Behaviour
 				count++;
 			}
 
-			if(count > 98)
+			if(count > 999)
             {
 				InformationManager.DisplayMessage(new InformationMessage("NobleKiller error finding valid lord. This mod is up the creek without a paddle. Flying blind mode activated."));
             }				

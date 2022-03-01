@@ -1,6 +1,5 @@
 ﻿using NobleKiller.Behaviour;
 using TaleWorlds.SaveSystem;
-using StoryMode;
 using TaleWorlds.CampaignSystem;
 
 namespace NobleKiller
