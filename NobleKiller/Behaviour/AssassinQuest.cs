@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.Core;
 using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.CampaignSystem.SandBox;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
@@ -76,7 +75,9 @@ namespace NobleKiller.Behaviour
             //AddTrackedObject(Target);
 
             // Change hero to be highly likely to die
-            target.ProbabilityOfDeath = 200;
+            //target.ProbabilityOfDeath = NKSettings.Instance.NobleDeathPercent;
+            target.HitPoints = 0;
+            
 
             AddLog(NKStartQuestLog);
         }
@@ -111,6 +112,15 @@ namespace NobleKiller.Behaviour
             }
         }
 
+        private TextObject NKCancelQuestLog
+        {
+            get
+            {
+                TextObject assassination = new TextObject("If that guy hadn't up and died of old age I was gonna send him to an early grave.");
+                return assassination;
+            }
+        }
+
         public override TextObject Title
         {
             get
@@ -139,7 +149,7 @@ namespace NobleKiller.Behaviour
             NobleKillerDialogue.PublicQuestActiveModifiable = QuestRunning;
             PublicQuestRunningModifiable = false;
             AssassinationSuccessful = true;
-            AddLog(NKEndQuestLog);
+            AddLog(NKEndQuestLog);            
         }
 
         public void FailAssassinQuest()
@@ -154,6 +164,20 @@ namespace NobleKiller.Behaviour
             AddLog(NKFailQuestLog);
         }
 
+        public void CancelQuestOldAge()
+        {            
+            CompleteQuestWithCancel();
+            GiveGoldAction.ApplyForQuestBetweenCharacters(Instigator, Hero.MainHero, 200, false);
+            FailQuest = false;
+            QuestRunning = false;
+            AssassinQuest.HideDialogue = false;
+            NobleKillerDialogue.RandomSoonToBeDeadGuy = null;
+            NobleKillerDialogue.PublicQuestActiveModifiable = QuestRunning;
+            PublicQuestRunningModifiable = false;
+            AssassinationSuccessful = true;
+            AddLog(NKCancelQuestLog);
+        }
+
         protected override void RegisterEvents()
         {
             PublicQuestRunningModifiable = QuestRunning;
@@ -163,8 +187,12 @@ namespace NobleKiller.Behaviour
         }
 
         protected void Tick(float dt)
-        {                        
-            if (Target.IsDead)
+        {         
+            if (Target.IsDead && Target.DeathMark == KillCharacterAction.KillCharacterActionDetail.DiedOfOldAge && NKSettings.Instance.AllowQuestCancel)
+            {
+                CancelQuestOldAge();
+            }
+            else if (Target.IsDead)
             {
                 CompleteAssassinQuest();
             }            

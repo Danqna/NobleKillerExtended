@@ -6,11 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.Core;
 using TaleWorlds.CampaignSystem.Actions;
+using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.SaveSystem;
 using TaleWorlds.SaveSystem.Load;
+using TaleWorlds.CampaignSystem.Encyclopedia;
 
 namespace NobleKiller.Behaviour
 {
@@ -25,12 +27,11 @@ namespace NobleKiller.Behaviour
 		public bool barterhighsuccess;
 		public bool barterhardsuccess;
 		public Hero quest_giver;
-		
-		
+				
 
 		public static Hero RandomSoonToBeDeadGuy;
 		public static bool PublicQuestActiveModifiable;
-		public static Hero PublicQuestGiverModifiable;
+		public static Hero PublicQuestGiverModifiable;		
 
 		public override void RegisterEvents()
 		{
@@ -64,16 +65,19 @@ namespace NobleKiller.Behaviour
 			// NEW RESPONSES WHILE ON QUEST
 			starter.AddPlayerLine("assassin_dialogue_quest_response_quit", "assassin_dialogue_quest_response", "endquestprematurely", "I need to abandon this. (move on world map after this)", null, FailAssassinQuest, 100, null);
 			starter.AddPlayerLine("assassin_dialogue_quest_response_OK", "assassin_dialogue_quest_response", "assassin_working_on_it", "I'm working on it, I just need a little more time.", null, null, 100, null);
+			starter.AddPlayerLine("assassin_dialogue_quest_response_OK", "assassin_dialogue_quest_response", "assassin_working_on_it", "Can you remind me exactly who I'm trying to find?", null, ShowHeroEncyclopediaPage, 100, null);
 			starter.AddDialogLine("endquestprematurely", "endquestprematurely", "hero_main_options", "A disappointing result for our deal.", null, Assassin_Abandon_Quest_Immediately, 100, null);
 			starter.AddDialogLine("assassin_working_on_it", "assassin_working_on_it", "hero_main_options", "Excellent news, please keep me updated if things change.", null, null, 100, null);
 			// TO-DO - ADD THE COMPLETION DIALOGUE OPTION HERE
 			
 			// ASSASSINATION DIALOGUE - NOBLE KILLER
-			starter.AddPlayerLine("assassin_target_start", "assassin_dialogue_choice", "assassin_noble_response", "(Select for Assassination) You have made a poor choice in enemies.",	new ConversationSentence.OnConditionDelegate(this.Noble_Killer_Hero_Check),this.Noble_Killer_Select, 100, null);
-			starter.AddPlayerLine("assassin_start_hasgold", "assassin_dialogue_choice", "assassin_response", "(Assassinate) Will you remove a piece from the board for 5000 coins?", new ConversationSentence.OnConditionDelegate(this.Noble_Killer_Assassin_Gold_Check), Noble_Killer_Consequence);
+			starter.AddPlayerLine("assassin_target_start", "assassin_dialogue_choice", "assassin_noble_response", "(Select for Assassination) You have made a poor choice in enemies.",	this.Noble_Killer_Hero_Check,this.Noble_Killer_Select, 100, null);
+			starter.AddPlayerLine("assassin_start_hasgold", "assassin_dialogue_choice", "assassin_response", "(Assassinate) Will you remove a piece from the board for 5000 coins?", this.Noble_Killer_Assassin_Gold_Check, Noble_Killer_Consequence);
+			//starter.AddPlayerLine("assassin_start_hasnogold", "assassin_dialogue_choice", "assassin_exit_response",
+			//	textObject.ToString(), 
+			//	new ConversationSentence.OnConditionDelegate(this.Noble_Killer_Assassin_Check), null);
 			starter.AddPlayerLine("assassin_start_hasnogold", "assassin_dialogue_choice", "assassin_exit_response",
-				textObject.ToString(), 
-				new ConversationSentence.OnConditionDelegate(this.Noble_Killer_Assassin_Check), null);
+				textObject.ToString(), this.Noble_Killer_Assassin_Check, null);
 			starter.AddPlayerLine("assassin_exit", "assassin_dialogue_choice", "assassin_exit_response", "Never mind...", null, null, 100, null);
 			starter.AddDialogLine("assassin_noble_response", "assassin_noble_response", "hero_main_options", "I am rubber, you are glue.", null, null, 100, null);			
 			starter.AddDialogLine("assassin_response", "assassin_response", "hero_main_options", "To be honest, I've always hated them. Let me consult the alchemist...", null, null, 100, null);			
@@ -168,6 +172,7 @@ namespace NobleKiller.Behaviour
 			if (Hero.OneToOneConversationHero != null)
 			{				
 				KillCharacterAction.ApplyByDeathMarkForced(NobleKillerTarget, false);
+				NobleKillerTarget.AddDeathMark(Hero.MainHero, KillCharacterAction.KillCharacterActionDetail.Murdered);
 				InformationManager.DisplayMessage(new InformationMessage("And so " + NobleKillerTarget.Name.ToString() + " passed into the darkness..."));
 				GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, Hero.OneToOneConversationHero, _asscost, false);
 				NobleKillerTarget = null;
@@ -400,19 +405,25 @@ namespace NobleKiller.Behaviour
         {
 			RandomSoonToBeDeadGuy = null;
 			List<Hero> heroes = Hero.AllAliveHeroes.ToList();
-			int count = 0;
-			while (RandomSoonToBeDeadGuy == null && count < 1000)
+
+			//Let's filter for Lords, noncombatants and children
+			List<Hero> filter1 = new List<Hero>();
+			foreach(Hero hero in heroes)
+            {
+				if(hero.Occupation == Occupation.Lord && hero.IsChild == false && hero.IsNoncombatant == false)
+                {
+					filter1.Add(hero);
+                }
+            }
+
+			while (RandomSoonToBeDeadGuy == null)
 			{
 				Random rnd = new Random();
-				int ourluckyhero = rnd.Next(0, (heroes.Count() - 1));
-				if (heroes[ourluckyhero].Occupation == Occupation.Lord)
-				{
-					RandomSoonToBeDeadGuy = heroes[ourluckyhero];
-				}
-				count++;
+				int ourluckyhero = rnd.Next(0, (filter1.Count() - 1));																
+				RandomSoonToBeDeadGuy = filter1[ourluckyhero];
 			}
 
-			if(count > 999)
+			if(RandomSoonToBeDeadGuy == null)
             {
 				InformationManager.DisplayMessage(new InformationMessage("NobleKiller error finding valid lord. This mod is up the creek without a paddle. Flying blind mode activated."));
             }				
@@ -434,6 +445,12 @@ namespace NobleKiller.Behaviour
 				return true;
 			}
 			return false;
+		}
+
+		private void ShowHeroEncyclopediaPage()
+        {
+			//Campaign.Current.EncyclopediaManager.GoToLink(HeroObject.EncyclopediaLink);
+			Campaign.Current.EncyclopediaManager.GoToLink(RandomSoonToBeDeadGuy.EncyclopediaLink);
 		}
 
 		/// <summary>
