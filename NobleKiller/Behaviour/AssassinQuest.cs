@@ -87,10 +87,18 @@ namespace NobleKiller.Behaviour
         private TextObject NKStartQuestLog
         {
             get
-            {                
-                TextObject assassination = new TextObject("The noble " + Hero.OneToOneConversationHero.Name + " wants me to discreetly take care of " + 
-                    Target + " so my agents are out scouring the land to bring about their demise.");
-                return assassination;
+            {
+                //TextObject assNKStartQL = new TextObject("The noble " + Hero.OneToOneConversationHero.Name + " wants me to discreetly take care of " + 
+                //    Target + " so my agents are out scouring the land to bring about their demise.");                
+
+                // Converted here
+
+                TextObject NKStartQL1 = new TextObject("The noble {NOBLE_NAME} wants me to discreetly take care of {TARGET_NOBLE_NAME} so my agents are out scouring the land to bring about their demise.");
+
+                NKStartQL1.SetTextVariable("NOBLE_NAME", Hero.OneToOneConversationHero.Name);
+                NKStartQL1.SetTextVariable("TARGET_NOBLE_NAME", Target.Name);
+
+                return NKStartQL1;
             }
         }
 
@@ -98,8 +106,8 @@ namespace NobleKiller.Behaviour
         {
             get
             {
-                TextObject assassination = new TextObject("Mamaaa, just killed a man, put a gun against his head, pulled my trigger, now he's dead.");
-                return assassination;
+                TextObject NKEndQL1 = new TextObject("Mamaaa, just killed a man, put a gun against his head, pulled my trigger, now he's dead.");
+                return NKEndQL1;
             }
         }
 
@@ -107,8 +115,8 @@ namespace NobleKiller.Behaviour
         {
             get
             {
-                TextObject assassination = new TextObject("I just couldn't do it, why am I like this? It's a dog eat dog world!");
-                return assassination;
+                TextObject NKFailQL1 = new TextObject("I just couldn't do it, why am I like this? It's a dog eat dog world!");
+                return NKFailQL1;
             }
         }
 
@@ -116,8 +124,8 @@ namespace NobleKiller.Behaviour
         {
             get
             {
-                TextObject assassination = new TextObject("If that guy hadn't up and died of old age I was gonna send him to an early grave.");
-                return assassination;
+                TextObject NKCancelQL = new TextObject("If that guy hadn't up and died of old age I was gonna send him to an early grave.");
+                return NKCancelQL;
             }
         }
 
@@ -125,8 +133,8 @@ namespace NobleKiller.Behaviour
         {
             get
             {
-                TextObject parent = new TextObject("Doing Dirty Work");                
-                return parent;
+                TextObject NKQTitle = new TextObject("Doing Dirty Work");                
+                return NKQTitle;
             }
         }
 
